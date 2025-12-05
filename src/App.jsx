@@ -156,7 +156,7 @@ const getMockResponse = (userText) => {
     return "Yes! We offer complimentary High-Speed WiFi and Free Valet Parking for all guests. (Demo Mode)";
   }
 
-  return "Hello! I am Jina. I am currently running in **Demo Mode** because the API Key is not set.\n\nI can still answer basic questions about our **Rooms**, **Location**, or **Dining**. What would you like to know?";
+  return "Hello! I’m Jina. I’m having a tiny technical hiccup right now.\n\nI think my developer, Monoswee Nath, is either updating something awesome for you… or he’s off somewhere eating, sleeping, and living his best life.\n\nBut don’t worry—I can still answer questions about our Rooms, Location, and Dining!";
 };
 
 const callGeminiAPI = async (messages) => {
@@ -238,8 +238,8 @@ const Button = ({ children, primary = false, className = "", ...props }) => {
   return (
     <button
       className={`px-8 py-3 rounded-full font-medium transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg ${primary
-          ? "bg-amber-600 text-white hover:bg-amber-700 shadow-amber-900/20"
-          : "bg-transparent border-2 border-current hover:bg-gray-100 dark:hover:bg-gray-800"
+        ? "bg-amber-600 text-white hover:bg-amber-700 shadow-amber-900/20"
+        : "bg-transparent border-2 border-current hover:bg-gray-100 dark:hover:bg-gray-800"
         } ${className}`}
       {...props}
     >
@@ -295,8 +295,8 @@ const AIChatWidget = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center gap-2 ${isOpen
-            ? "bg-zinc-800 text-white rotate-90"
-            : "bg-amber-600 text-white animate-bounce-subtle"
+          ? "bg-zinc-800 text-white rotate-90"
+          : "bg-amber-600 text-white animate-bounce-subtle"
           }`}
       >
         {isOpen ? <X size={24} /> : <Sparkles size={24} />}
@@ -332,8 +332,8 @@ const AIChatWidget = () => {
             >
               <div
                 className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${msg.sender === 'user'
-                    ? "bg-amber-600 text-white rounded-br-none"
-                    : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-zinc-700 rounded-bl-none shadow-sm"
+                  ? "bg-amber-600 text-white rounded-br-none"
+                  : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-zinc-700 rounded-bl-none shadow-sm"
                   }`}
               >
                 {msg.sender === 'ai' && (
@@ -734,8 +734,8 @@ export default function Jina() {
       {/* Navigation */}
       <nav
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled
-            ? "bg-white/80 dark:bg-black/80 backdrop-blur-md py-4 shadow-lg border-b border-gray-200 dark:border-zinc-800"
-            : "bg-transparent py-6"
+          ? "bg-white/80 dark:bg-black/80 backdrop-blur-md py-4 shadow-lg border-b border-gray-200 dark:border-zinc-800"
+          : "bg-transparent py-6"
           }`}
       >
         <div className="container mx-auto px-6 flex justify-between items-center">
@@ -769,8 +769,8 @@ export default function Jina() {
             <button
               onClick={() => setDarkMode(!darkMode)}
               className={`p-2 rounded-full transition-colors ${scrolled
-                  ? "hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-white"
-                  : "bg-white/10 hover:bg-white/20 text-white"
+                ? "hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-white"
+                : "bg-white/10 hover:bg-white/20 text-white"
                 }`}
             >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
