@@ -38,19 +38,24 @@ import {
  * - Responsive Mobile Menu
  * - Interactive Lightbox Gallery with Zoom
  * - Full Gallery View with Footer & Navigation Support
- * - Gemini AI Powered Concierge (With Smart Demo Fallback)
+ * - Gemini AI Powered Concierge (Vercel Ready)
  */
 
 // --- Configuration ---
 
-// 1. FOR VERCEL / VITE DEPLOYMENT:
-//    If you are deploying to Vercel, UNCOMMENT the line below.
-//    Ensure 'VITE_GEMINI_API_KEY' is set in your Vercel Project Settings.
-//    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+// Automatically detect API Key from Vercel Environment or Local .env
+// We use a safe check to prevent crashes in environments where import.meta is restricted
+const getApiKey = () => {
+  try {
+    // VITE_GEMINI_API_KEY is required for Vite/Vercel
+    return import.meta.env.VITE_GEMINI_API_KEY || "";
+  } catch (error) {
+    // Fallback for non-Vite environments
+    return "";
+  }
+};
 
-// 2. FOR PREVIEW ENVIRONMENT:
-//    Keep this line exactly as is. The system injects the key automatically here.
-const apiKey = "";
+const apiKey = getApiKey();
 
 // --- Hooks & Utilities ---
 
