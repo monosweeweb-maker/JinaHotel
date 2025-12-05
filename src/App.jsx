@@ -38,18 +38,18 @@ import {
  * - Responsive Mobile Menu
  * - Interactive Lightbox Gallery with Zoom
  * - Full Gallery View with Footer & Navigation Support
- * - Gemini AI Powered Concierge (Fixed for Vercel/Preview)
+ * - Gemini AI Powered Concierge (Enhanced Error Handling)
  */
 
 // --- Configuration ---
 
 // 1. FOR VERCEL / VITE DEPLOYMENT:
-//    To use environment variables, uncomment the line below in your local setup.
-//    Ensure 'VITE_GEMINI_API_KEY' is set in your .env file or Vercel settings.
+//    If you are deploying to Vercel, UNCOMMENT the line below.
+//    Ensure 'VITE_GEMINI_API_KEY' is set in your Vercel Project Settings.
 //    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
 
 // 2. FOR PREVIEW ENVIRONMENT:
-//    Keep this line as is. The system injects the key automatically.
+//    Keep this line exactly as is. The system injects the key automatically here.
 const apiKey = "";
 
 // --- Hooks & Utilities ---
@@ -135,17 +135,15 @@ Your Goal: Answer guest questions politely, professionally, and concisely. If th
 `;
 
 const callGeminiAPI = async (messages) => {
-  // Using the globally defined apiKey to ensure compatibility
-
+  // Check if API Key is available
   if (!apiKey) {
-    // Only warn in console, don't break the UI
-    console.warn("API Key is empty. If running locally, set VITE_GEMINI_API_KEY.");
+    console.error("API Key is missing.");
+    // We throw a specific error to catch it and show a helpful message in the UI
+    throw new Error("MISSING_KEY");
   }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
-  // Format history for Gemini
-  // We keep it simple: System prompt + last few messages to maintain context window efficiency
   const contents = [
     {
       role: "user",
@@ -161,27 +159,26 @@ const callGeminiAPI = async (messages) => {
     }))
   ];
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: contents,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 250, // Keep responses brief for chat
-        }
-      })
-    });
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 250,
+      }
+    })
+  });
 
-    if (!response.ok) throw new Error('API Error');
-
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "I apologize, I'm having trouble connecting right now. Please try again.";
-  } catch (error) {
-    console.error("Gemini Error:", error);
-    return "I apologize, but I am currently unable to reach the server. Please try again later.";
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    console.error("Gemini API Error:", errData);
+    throw new Error("API_FAIL");
   }
+
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "I didn't quite catch that. Could you rephrase?";
 };
 
 // --- Components ---
@@ -242,12 +239,24 @@ const AIChatWidget = () => {
     setInputValue("");
     setIsLoading(true);
 
-    // Call Gemini
-    const aiResponseText = await callGeminiAPI([...messages, userMsg]);
+    try {
+      // Call Gemini
+      const aiResponseText = await callGeminiAPI([...messages, userMsg]);
+      const aiMsg = { id: Date.now() + 1, text: aiResponseText, sender: 'ai' };
+      setMessages(prev => [...prev, aiMsg]);
+    } catch (error) {
+      console.error("Chat Error:", error);
+      let errorText = "I apologize, but I am currently unable to reach the server. Please try again later.";
 
-    const aiMsg = { id: Date.now() + 1, text: aiResponseText, sender: 'ai' };
-    setMessages(prev => [...prev, aiMsg]);
-    setIsLoading(false);
+      if (error.message === "MISSING_KEY") {
+        errorText = "⚠️ SYSTEM CONFIG ERROR: API Key is missing.\n\nIf you are the developer:\n1. Open App.jsx\n2. Uncomment 'const apiKey = import.meta.env...' line\n3. Ensure VITE_GEMINI_API_KEY is set in Vercel/Environment.";
+      }
+
+      const errorMsg = { id: Date.now() + 1, text: errorText, sender: 'ai' };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -292,7 +301,7 @@ const AIChatWidget = () => {
               className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${msg.sender === 'user'
+                className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${msg.sender === 'user'
                     ? "bg-amber-600 text-white rounded-br-none"
                     : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-zinc-700 rounded-bl-none shadow-sm"
                   }`}
