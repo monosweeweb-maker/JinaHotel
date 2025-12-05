@@ -44,12 +44,12 @@ import {
 // --- Configuration ---
 
 // 1. FOR VERCEL / VITE DEPLOYMENT:
-//    Uncomment the line below to use your environment variable.
-//    Make sure to set VITE_GEMINI_API_KEY in your Vercel Project Settings.
-// const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+//    To use environment variables, uncomment the line below in your local setup.
+//    Ensure 'VITE_GEMINI_API_KEY' is set in your .env file or Vercel settings.
+//    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
 
 // 2. FOR PREVIEW ENVIRONMENT:
-//    Keep this line as is. The system injects the key into this specific pattern.
+//    Keep this line as is. The system injects the key automatically.
 const apiKey = "";
 
 // --- Hooks & Utilities ---
@@ -138,7 +138,7 @@ const callGeminiAPI = async (messages) => {
   // Using the globally defined apiKey to ensure compatibility
 
   if (!apiKey) {
-    // Only warn in console, don't break the UI, though it will likely fail if no key is present at all.
+    // Only warn in console, don't break the UI
     console.warn("API Key is empty. If running locally, set VITE_GEMINI_API_KEY.");
   }
 
