@@ -38,8 +38,19 @@ import {
  * - Responsive Mobile Menu
  * - Interactive Lightbox Gallery with Zoom
  * - Full Gallery View with Footer & Navigation Support
- * - Gemini AI Powered Concierge (New!)
+ * - Gemini AI Powered Concierge (Fixed for Vercel/Preview)
  */
+
+// --- Configuration ---
+
+// 1. FOR VERCEL / VITE DEPLOYMENT:
+//    Uncomment the line below to use your environment variable.
+//    Make sure to set VITE_GEMINI_API_KEY in your Vercel Project Settings.
+// const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+
+// 2. FOR PREVIEW ENVIRONMENT:
+//    Keep this line as is. The system injects the key into this specific pattern.
+const apiKey = "";
 
 // --- Hooks & Utilities ---
 
@@ -124,20 +135,11 @@ Your Goal: Answer guest questions politely, professionally, and concisely. If th
 `;
 
 const callGeminiAPI = async (messages) => {
-  // ---------------------------------------------------------
-  // FOR VERCEL / VITE LOCAL DEVELOPMENT:
-  // Uncomment the line below to use your environment variable:
-  // const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-  // ---------------------------------------------------------
+  // Using the globally defined apiKey to ensure compatibility
 
-  // For this preview environment, we keep it empty (it is injected automatically):
-  const apiKey = "";
-
-  // NOTE: If you are running this locally or on Vercel and haven't set the key,
-  // this check will warn you.
-  // We check for localhost but avoid using import.meta directly here to prevent build errors in preview.
-  if (!apiKey && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    console.warn("Gemini API Key might be missing. Ensure VITE_GEMINI_API_KEY is set in your environment variables.");
+  if (!apiKey) {
+    // Only warn in console, don't break the UI, though it will likely fail if no key is present at all.
+    console.warn("API Key is empty. If running locally, set VITE_GEMINI_API_KEY.");
   }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
