@@ -38,7 +38,7 @@ import {
  * - Responsive Mobile Menu
  * - Interactive Lightbox Gallery with Zoom
  * - Full Gallery View with Footer & Navigation Support
- * - Gemini AI Powered Concierge (Enhanced Error Handling)
+ * - Gemini AI Powered Concierge (With Smart Demo Fallback)
  */
 
 // --- Configuration ---
@@ -134,14 +134,41 @@ Hotel Details:
 Your Goal: Answer guest questions politely, professionally, and concisely. If they want to book, tell them to click the "Book Now" button in the navigation. You can also suggest itineraries for Silchar.
 `;
 
-const callGeminiAPI = async (messages) => {
-  // Check if API Key is available
-  if (!apiKey) {
-    console.error("API Key is missing.");
-    // We throw a specific error to catch it and show a helpful message in the UI
-    throw new Error("MISSING_KEY");
+// Helper for Demo Mode responses
+const getMockResponse = (userText) => {
+  const text = userText.toLowerCase();
+
+  if (text.includes('room') || text.includes('price') || text.includes('cost') || text.includes('stay')) {
+    return "Since I'm in Demo Mode, I can tell you our rates:\n\n• Executive Room: ₹3,500\n• Luxury Suite: ₹5,200\n• Classic Double: ₹2,800\n\nAll rooms include breakfast!";
+  }
+  if (text.includes('food') || text.includes('restaurant') || text.includes('eat') || text.includes('dining')) {
+    return "Our restaurant serves authentic Assamese and multi-cuisine dishes from 7 AM to 10:30 PM. We also have a lovely Bar & Lounge open until 10 PM. (Demo Mode)";
+  }
+  if (text.includes('location') || text.includes('where') || text.includes('address')) {
+    return "We are located at Malugram, Silchar, Assam 788002. It's a prime location near the city center! (Demo Mode)";
+  }
+  if (text.includes('wifi') || text.includes('parking') || text.includes('gym')) {
+    return "Yes! We offer complimentary High-Speed WiFi and Free Valet Parking for all guests. (Demo Mode)";
   }
 
+  return "Hello! I am Jina. I am currently running in **Demo Mode** because the API Key is not set.\n\nI can still answer basic questions about our **Rooms**, **Location**, or **Dining**. What would you like to know?";
+};
+
+const callGeminiAPI = async (messages) => {
+  const lastUserMessage = messages[messages.length - 1];
+  const userText = lastUserMessage.text || "";
+
+  // ---------------------------------------------------------
+  // FALLBACK: If no API key, return a mock response immediately
+  // ---------------------------------------------------------
+  if (!apiKey) {
+    console.warn("API Key missing. Switching to Demo Mode.");
+    // Simulate network delay for realism
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return getMockResponse(userText);
+  }
+
+  // Real API Call
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
   const contents = [
@@ -159,26 +186,30 @@ const callGeminiAPI = async (messages) => {
     }))
   ];
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: contents,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 250,
-      }
-    })
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 250,
+        }
+      })
+    });
 
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    console.error("Gemini API Error:", errData);
-    throw new Error("API_FAIL");
+    if (!response.ok) {
+      throw new Error("API_FAIL");
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "I didn't quite catch that. Could you rephrase?";
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    // Even if the API call fails (e.g. quota, network), fallback to mock
+    return getMockResponse(userText);
   }
-
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "I didn't quite catch that. Could you rephrase?";
 };
 
 // --- Components ---
@@ -240,19 +271,13 @@ const AIChatWidget = () => {
     setIsLoading(true);
 
     try {
-      // Call Gemini
+      // Call Gemini (or Mock Fallback)
       const aiResponseText = await callGeminiAPI([...messages, userMsg]);
       const aiMsg = { id: Date.now() + 1, text: aiResponseText, sender: 'ai' };
       setMessages(prev => [...prev, aiMsg]);
     } catch (error) {
       console.error("Chat Error:", error);
-      let errorText = "I apologize, but I am currently unable to reach the server. Please try again later.";
-
-      if (error.message === "MISSING_KEY") {
-        errorText = "⚠️ SYSTEM CONFIG ERROR: API Key is missing.\n\nIf you are the developer:\n1. Open App.jsx\n2. Uncomment 'const apiKey = import.meta.env...' line\n3. Ensure VITE_GEMINI_API_KEY is set in Vercel/Environment.";
-      }
-
-      const errorMsg = { id: Date.now() + 1, text: errorText, sender: 'ai' };
+      const errorMsg = { id: Date.now() + 1, text: "I'm having trouble connecting right now. Please try again.", sender: 'ai' };
       setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
