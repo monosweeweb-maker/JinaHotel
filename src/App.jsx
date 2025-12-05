@@ -20,7 +20,13 @@ import {
   Facebook,
   Twitter,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  MessageSquare,
+  Send,
+  Sparkles,
+  Bot,
+  User,
+  Loader2
 } from 'lucide-react';
 
 /**
@@ -32,6 +38,7 @@ import {
  * - Responsive Mobile Menu
  * - Interactive Lightbox Gallery with Zoom
  * - Full Gallery View with Footer & Navigation Support
+ * - Gemini AI Powered Concierge (New!)
  */
 
 // --- Hooks & Utilities ---
@@ -100,6 +107,81 @@ const useOnScreen = (options) => {
   return [ref, isVisible];
 };
 
+// --- Gemini API Integration ---
+
+const HOTEL_CONTEXT = `
+You are Jina, the AI Concierge for Hotel Jina, a luxury hotel in Silchar, Assam.
+Hotel Details:
+- Address: Malugram, Silchar, Assam 788002.
+- Contact: +91 95312 73486, m.nath190702@gmail.com.
+- Rooms: 
+  1. Executive Room (375 sq ft, King Bed, City View) - ₹3,500/night.
+  2. Luxury Suite (420 sq ft, Living Area, Bathtub) - ₹5,200/night.
+  3. Classic Double (172 sq ft, Twin/Double) - ₹2,800/night.
+- Amenities: Free Valet Parking, High-Speed Wifi, In-room Dining, Restaurant (7AM-10:30PM), Bar/Lounge (11AM-10PM), 24/7 Front Desk.
+- Location Highlights: Near heart of Silchar city.
+Your Goal: Answer guest questions politely, professionally, and concisely. If they want to book, tell them to click the "Book Now" button in the navigation. You can also suggest itineraries for Silchar.
+`;
+
+const callGeminiAPI = async (messages) => {
+  // ---------------------------------------------------------
+  // FOR VERCEL / VITE LOCAL DEVELOPMENT:
+  // Uncomment the line below to use your environment variable:
+  // const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+  // ---------------------------------------------------------
+
+  // For this preview environment, we keep it empty (it is injected automatically):
+  const apiKey = "";
+
+  // NOTE: If you are running this locally or on Vercel and haven't set the key,
+  // this check will warn you.
+  // We check for localhost but avoid using import.meta directly here to prevent build errors in preview.
+  if (!apiKey && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    console.warn("Gemini API Key might be missing. Ensure VITE_GEMINI_API_KEY is set in your environment variables.");
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+  // Format history for Gemini
+  // We keep it simple: System prompt + last few messages to maintain context window efficiency
+  const contents = [
+    {
+      role: "user",
+      parts: [{ text: HOTEL_CONTEXT }]
+    },
+    {
+      role: "model",
+      parts: [{ text: "Understood. I am Jina, the AI Concierge for Hotel Jina. I am ready to assist guests." }]
+    },
+    ...messages.map(m => ({
+      role: m.sender === 'user' ? 'user' : 'model',
+      parts: [{ text: m.text }]
+    }))
+  ];
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 250, // Keep responses brief for chat
+        }
+      })
+    });
+
+    if (!response.ok) throw new Error('API Error');
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "I apologize, I'm having trouble connecting right now. Please try again.";
+  } catch (error) {
+    console.error("Gemini Error:", error);
+    return "I apologize, but I am currently unable to reach the server. Please try again later.";
+  }
+};
+
 // --- Components ---
 
 const Reveal = ({ children, delay = 0, className = "" }) => {
@@ -121,13 +203,141 @@ const Button = ({ children, primary = false, className = "", ...props }) => {
   return (
     <button
       className={`px-8 py-3 rounded-full font-medium transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg ${primary
-        ? "bg-amber-600 text-white hover:bg-amber-700 shadow-amber-900/20"
-        : "bg-transparent border-2 border-current hover:bg-gray-100 dark:hover:bg-gray-800"
+          ? "bg-amber-600 text-white hover:bg-amber-700 shadow-amber-900/20"
+          : "bg-transparent border-2 border-current hover:bg-gray-100 dark:hover:bg-gray-800"
         } ${className}`}
       {...props}
     >
       {children}
     </button>
+  );
+};
+
+// AI Chat Widget Component
+const AIChatWidget = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { id: 1, text: "Hello! I'm Jina, your AI concierge. How can I help you plan your stay in Silchar today?", sender: 'ai' }
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isOpen]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!inputValue.trim()) return;
+
+    const userMsg = { id: Date.now(), text: inputValue, sender: 'user' };
+    setMessages(prev => [...prev, userMsg]);
+    setInputValue("");
+    setIsLoading(true);
+
+    // Call Gemini
+    const aiResponseText = await callGeminiAPI([...messages, userMsg]);
+
+    const aiMsg = { id: Date.now() + 1, text: aiResponseText, sender: 'ai' };
+    setMessages(prev => [...prev, aiMsg]);
+    setIsLoading(false);
+  };
+
+  return (
+    <>
+      {/* Floating Toggle Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center gap-2 ${isOpen
+            ? "bg-zinc-800 text-white rotate-90"
+            : "bg-amber-600 text-white animate-bounce-subtle"
+          }`}
+      >
+        {isOpen ? <X size={24} /> : <Sparkles size={24} />}
+      </button>
+
+      {/* Chat Window */}
+      <div
+        className={`fixed bottom-24 right-6 w-[90vw] md:w-96 h-[500px] bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl z-50 flex flex-col border border-gray-100 dark:border-zinc-800 transition-all duration-300 transform origin-bottom-right ${isOpen ? "scale-100 opacity-100 translate-y-0" : "scale-95 opacity-0 translate-y-10 pointer-events-none"
+          }`}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-gray-100 dark:border-zinc-800 bg-amber-600 rounded-t-2xl flex items-center justify-between">
+          <div className="flex items-center gap-2 text-white">
+            <Bot size={20} />
+            <div>
+              <h3 className="font-bold text-sm">Ask Jina AI</h3>
+              <p className="text-xs text-amber-100 flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" /> Online
+              </p>
+            </div>
+          </div>
+          <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white">
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-zinc-950/50">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${msg.sender === 'user'
+                    ? "bg-amber-600 text-white rounded-br-none"
+                    : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-zinc-700 rounded-bl-none shadow-sm"
+                  }`}
+              >
+                {msg.sender === 'ai' && (
+                  <div className="flex items-center gap-1 mb-1 text-amber-600 text-xs font-bold uppercase tracking-wider">
+                    <Sparkles size={10} /> Jina
+                  </div>
+                )}
+                {msg.text}
+              </div>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-white dark:bg-zinc-800 p-3 rounded-2xl rounded-bl-none shadow-sm border border-gray-100 dark:border-zinc-700">
+                <Loader2 size={16} className="animate-spin text-amber-600" />
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <form onSubmit={handleSendMessage} className="p-4 bg-white dark:bg-zinc-900 border-t border-gray-100 dark:border-zinc-800 rounded-b-2xl">
+          <div className="relative">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Ask about rooms, food, or Silchar..."
+              className="w-full pl-4 pr-12 py-3 bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all text-sm"
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !inputValue.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Send size={16} />
+            </button>
+          </div>
+          <p className="text-center text-[10px] text-gray-400 mt-2">
+            Powered by Jina Ai ✨
+          </p>
+        </form>
+      </div>
+    </>
   );
 };
 
@@ -477,11 +687,14 @@ export default function Jina() {
         />
       )}
 
+      {/* AI Chat Widget (New Feature) */}
+      <AIChatWidget />
+
       {/* Navigation */}
       <nav
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled
-          ? "bg-white/80 dark:bg-black/80 backdrop-blur-md py-4 shadow-lg border-b border-gray-200 dark:border-zinc-800"
-          : "bg-transparent py-6"
+            ? "bg-white/80 dark:bg-black/80 backdrop-blur-md py-4 shadow-lg border-b border-gray-200 dark:border-zinc-800"
+            : "bg-transparent py-6"
           }`}
       >
         <div className="container mx-auto px-6 flex justify-between items-center">
@@ -515,8 +728,8 @@ export default function Jina() {
             <button
               onClick={() => setDarkMode(!darkMode)}
               className={`p-2 rounded-full transition-colors ${scrolled
-                ? "hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-white"
-                : "bg-white/10 hover:bg-white/20 text-white"
+                  ? "hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-900 dark:text-white"
+                  : "bg-white/10 hover:bg-white/20 text-white"
                 }`}
             >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
