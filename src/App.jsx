@@ -158,7 +158,7 @@ const getMockResponse = (userText) => {
     return "Yes! We offer complimentary High-Speed WiFi and Free Valet Parking for all guests. (Demo Mode)";
   }
 
-  return "Hello! I am Jina. I am currently running in **Demo Mode** because the API Key is not set.\n\nI can still answer basic questions about our **Rooms**, **Location**, or **Dining**. What would you like to know?";
+  return "Hi! I’m Jina. I’m having a tiny technical hiccup right now.\n\n I think my developer, Monoswee Nath, is either updating something awesome for you… or he’s off somewhere eating, sleeping, and living his best life.\n\n But don’t worry—I can still answer questions about our Rooms, Location, and Dining!";
 };
 
 const callGeminiAPI = async (messages) => {
