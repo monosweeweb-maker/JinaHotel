@@ -28,7 +28,9 @@ import {
   Sparkles,
   Bot,
   User,
-  Loader2
+  Loader2,
+  Shield,
+  FileText
 } from 'lucide-react';
 
 /**
@@ -41,6 +43,7 @@ import {
  * - Interactive Lightbox Gallery with Zoom
  * - Full Gallery View with Footer & Navigation Support
  * - Gemini AI Powered Concierge (Vercel Ready)
+ * - Privacy Policy Page (New!)
  */
 
 // --- Configuration ---
@@ -505,8 +508,122 @@ const Lightbox = ({ src, onClose }) => {
   );
 };
 
+const PrivacyPolicy = ({ onClose }) => {
+  return (
+    <div className="fixed inset-0 z-[70] bg-white dark:bg-black overflow-y-auto animate-fade-in">
+      {/* Header */}
+      <div className="sticky top-0 bg-white/80 dark:bg-black/80 backdrop-blur-md z-20 border-b border-gray-100 dark:border-zinc-800">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <button
+            onClick={onClose}
+            className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-amber-600 transition-colors group"
+          >
+            <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="font-serif font-bold text-lg">Back</span>
+          </button>
+
+          <div className="text-amber-600 font-bold tracking-widest uppercase text-sm hidden md:block">
+            Legal Information
+          </div>
+
+          <button
+            onClick={onClose}
+            className="p-2 bg-gray-100 dark:bg-zinc-800 hover:bg-amber-600 hover:text-white rounded-full transition-colors text-gray-900 dark:text-white"
+          >
+            <X size={24} />
+          </button>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-6 py-16 max-w-4xl">
+        <div className="flex items-center gap-4 mb-8">
+          <Shield size={48} className="text-amber-600" />
+          <div>
+            <h1 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 dark:text-white">Privacy Policy</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">Effective Date: {new Date().toLocaleDateString()}</p>
+          </div>
+        </div>
+
+        <div className="prose dark:prose-invert max-w-none space-y-12 text-gray-700 dark:text-gray-300">
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+              <FileText size={20} className="text-amber-600" /> 1. Introduction
+            </h2>
+            <p>
+              Welcome to Jina Hotel ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data.
+              This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website,
+              book a room, or use our services.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">2. Information We Collect</h2>
+            <p className="mb-4">We may collect information about you in a variety of ways. The information we may collect includes:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li><strong>Personal Data:</strong> Name, email address, phone number, and payment information when you make a reservation.</li>
+              <li><strong>Stay History:</strong> Information regarding your previous stays, special requests, and preferences.</li>
+              <li><strong>Usage Data:</strong> Information about your device, browser, and how you interact with our website.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">3. How We Use Your Information</h2>
+            <p className="mb-4">We use the information we collect to:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Process and manage your reservations and bookings.</li>
+              <li>Communicate with you regarding updates, offers, and customer service.</li>
+              <li>Improve our website functionality and guest experience.</li>
+              <li>Ensure the security of our guests and property.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">4. Cookies and Tracking</h2>
+            <p>
+              We use cookies and similar tracking technologies to track the activity on our service and hold certain information.
+              You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">5. Third-Party Services</h2>
+            <p>
+              We may share information with third-party vendors who perform services for us, such as payment processing, data analysis,
+              email delivery, and hosting services. We ensure these parties adhere to strict data protection standards.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">6. Your Rights</h2>
+            <p className="mb-4">Depending on your location, you may have the right to:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Access the personal data we hold about you.</li>
+              <li>Request correction of any incorrect data.</li>
+              <li>Request deletion of your personal data.</li>
+              <li>Withdraw consent for marketing communications.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">7. Contact Us</h2>
+            <p className="mb-4">
+              If you have questions or comments about this Privacy Policy, please contact us at:
+            </p>
+            <div className="bg-gray-100 dark:bg-zinc-900 p-6 rounded-xl border border-gray-200 dark:border-zinc-800">
+              <p className="font-bold text-lg mb-2">Jina Hotel</p>
+              <p>Malugram, Silchar, Assam 788002</p>
+              <p>Email: m.nath190702@gmail.com</p>
+              <p>Phone: +91 95312 73486</p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Reusable Footer Component
-const SiteFooter = ({ onNavClick }) => {
+const SiteFooter = ({ onNavClick, onPrivacyClick }) => {
   return (
     <footer id="contact" className="bg-zinc-900 text-white pt-24 pb-12 border-t border-zinc-800">
       <div className="container mx-auto px-6">
@@ -553,7 +670,15 @@ const SiteFooter = ({ onNavClick }) => {
               <li><a href="#rooms" onClick={(e) => onNavClick(e, '#rooms')} className="hover:text-amber-500 transition-colors">Rooms & Suites</a></li>
               <li><a href="#dining" onClick={(e) => onNavClick(e, '#dining')} className="hover:text-amber-500 transition-colors">Dining</a></li>
               <li><a href="#amenities" onClick={(e) => onNavClick(e, '#amenities')} className="hover:text-amber-500 transition-colors">Amenities</a></li>
-              <li><a href="#" className="hover:text-amber-500 transition-colors">Privacy Policy</a></li>
+              <li>
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); onPrivacyClick(); }}
+                  className="hover:text-amber-500 transition-colors"
+                >
+                  Privacy Policy
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -658,7 +783,7 @@ const FullGallery = ({ onClose, onImageClick, onNavClick }) => {
       </div>
 
       {/* Footer included in Gallery View */}
-      <SiteFooter onNavClick={onNavClick} />
+      <SiteFooter onNavClick={onNavClick} onPrivacyClick={() => { }} />
     </div>
   );
 };
@@ -671,6 +796,7 @@ export default function Jina() {
   const [scrolled, setScrolled] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [showFullGallery, setShowFullGallery] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
 
   // Toggle Dark Mode
   useEffect(() => {
@@ -695,6 +821,7 @@ export default function Jina() {
   const handleNavClick = (e, targetId) => {
     e.preventDefault();
     setShowFullGallery(false);
+    setShowPrivacyPolicy(false);
     setIsMenuOpen(false);
 
     // Slight delay to allow gallery to close if open, improving animation smoothness
@@ -730,6 +857,11 @@ export default function Jina() {
           onImageClick={(src) => setLightboxImage(src)}
           onNavClick={handleNavClick}
         />
+      )}
+
+      {/* Privacy Policy Overlay (New) */}
+      {showPrivacyPolicy && (
+        <PrivacyPolicy onClose={() => setShowPrivacyPolicy(false)} />
       )}
 
       {/* AI Chat Widget (New Feature) */}
@@ -1088,7 +1220,7 @@ export default function Jina() {
       </section>
 
       {/* Main Page Footer */}
-      <SiteFooter onNavClick={handleNavClick} />
+      <SiteFooter onNavClick={handleNavClick} onPrivacyClick={() => setShowPrivacyPolicy(true)} />
     </div>
   );
 }
